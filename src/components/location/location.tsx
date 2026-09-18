@@ -121,7 +121,7 @@ export default function Location() {
           >
             <div className="relative aspect-[4/3] sm:aspect-[16/10]">
               <Image
-                src="/location/location.jpg"
+                src="/location/location.png"
                 alt="Goldstep Hotels surroundings"
                 fill
                 sizes="(max-width: 1024px) 100vw, 58vw"

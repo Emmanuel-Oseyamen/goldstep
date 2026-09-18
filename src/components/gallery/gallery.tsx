@@ -23,7 +23,7 @@ const galleryImages: GalleryImage[] = [
   },
   {
     id: "lobby",
-    src: "/gallery/unnamed.png",
+    src: "/gallery/gallery2.png",
     alt: "Goldstep hotel lobby",
     category: "The Hotel",
     title: "First impressions",
@@ -37,7 +37,7 @@ const galleryImages: GalleryImage[] = [
   },
   {
     id: "dining",
-    src: "/gallery/1.png",
+    src: "/gallery/unnamed.png",
     alt: "Goldstep dining room",
     category: "Dining",
     title: "Around the table",
