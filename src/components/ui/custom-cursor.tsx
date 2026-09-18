@@ -1,124 +1,106 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-} from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
-export function CustomCursor() {
-  const cursorRef =
-    useRef<HTMLDivElement>(null);
-
-  const followerRef =
-    useRef<HTMLDivElement>(null);
+export default function CustomCursor() {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const followerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const isTouchDevice =
-      window.matchMedia(
-        "(hover: none), (pointer: coarse)"
-      ).matches;
+    // Don't activate the custom cursor on touch/coarse-pointer devices.
+    const mediaQuery = window.matchMedia(
+      "(pointer: coarse)"
+    );
 
-    if (isTouchDevice) {
+    if (mediaQuery.matches) {
       return;
     }
 
-    const cursor =
-      cursorRef.current;
-
-    const follower =
-      followerRef.current;
+    const cursor = cursorRef.current;
+    const follower = followerRef.current;
 
     if (!cursor || !follower) {
       return;
     }
 
-    let mouseX = -100;
-    let mouseY = -100;
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
 
-    let followerX = -100;
-    let followerY = -100;
+    let followerX = mouseX;
+    let followerY = mouseY;
 
-    let frame = 0;
+    let animationFrame = 0;
 
-    function handlePointerMove(
-      event: PointerEvent
-    ) {
+    const handleMouseMove = (event: MouseEvent) => {
       mouseX = event.clientX;
       mouseY = event.clientY;
 
       cursor.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
-    }
+    };
 
-    function animateFollower() {
-      followerX +=
-        (mouseX - followerX) * 0.14;
-
-      followerY +=
-        (mouseY - followerY) * 0.14;
+    const animate = () => {
+      followerX += (mouseX - followerX) * 0.15;
+      followerY += (mouseY - followerY) * 0.15;
 
       follower.style.transform = `translate3d(${followerX}px, ${followerY}px, 0)`;
 
-      frame = requestAnimationFrame(
-        animateFollower
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    const handlePointerOver = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const interactive = target.closest(
+        "a, button, [data-cursor='interactive']"
       );
-    }
 
-    function handlePointerOver(
-      event: PointerEvent
-    ) {
-      const target = event.target as HTMLElement;
+      if (interactive) {
+        follower.classList.add("is-hovering");
+      }
+    };
+
+    const handlePointerOut = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const relatedTarget = event.relatedTarget;
 
       if (
+        relatedTarget instanceof Node &&
         target.closest(
           "a, button, [data-cursor='interactive']"
-        )
+        )?.contains(relatedTarget)
       ) {
-        follower.classList.add(
-          "cursor-expanded"
-        );
+        return;
       }
-    }
 
-    function handlePointerOut(
-      event: PointerEvent
-    ) {
-      const target = event.target as HTMLElement;
+      follower.classList.remove("is-hovering");
+    };
 
-      if (
-        target.closest(
-          "a, button, [data-cursor='interactive']"
-        )
-      ) {
-        follower.classList.remove(
-          "cursor-expanded"
-        );
-      }
-    }
-
-    document.addEventListener(
-      "pointermove",
-      handlePointerMove
-    );
-
+    window.addEventListener("mousemove", handleMouseMove);
     document.addEventListener(
       "pointerover",
       handlePointerOver
     );
-
     document.addEventListener(
       "pointerout",
       handlePointerOut
     );
 
-    frame = requestAnimationFrame(
-      animateFollower
-    );
+    animationFrame = requestAnimationFrame(animate);
 
     return () => {
-      document.removeEventListener(
-        "pointermove",
-        handlePointerMove
+      window.removeEventListener(
+        "mousemove",
+        handleMouseMove
       );
 
       document.removeEventListener(
@@ -131,7 +113,7 @@ export function CustomCursor() {
         handlePointerOut
       );
 
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(animationFrame);
     };
   }, []);
 
@@ -140,13 +122,13 @@ export function CustomCursor() {
       <motion.div
         ref={cursorRef}
         aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[9999] hidden h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold lg:block"
+        className="pointer-events-none fixed left-0 top-0 z-[9999] h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold"
       />
 
-      <div
+      <motion.div
         ref={followerRef}
         aria-hidden="true"
-        className="goldstep-cursor-follower pointer-events-none fixed left-0 top-0 z-[9998] hidden h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/50 opacity-0 transition-[width,height,background-color,border-color,opacity] duration-300 lg:block"
+        className="pointer-events-none fixed left-0 top-0 z-[9998] h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/50 transition-[width,height,background-color,border-color] duration-200"
       />
     </>
   );

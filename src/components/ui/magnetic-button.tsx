@@ -1,92 +1,95 @@
 "use client";
 
 import {
-  ButtonHTMLAttributes,
-  ReactNode,
+  type ComponentPropsWithoutRef,
   useRef,
 } from "react";
-import {
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+import { motion, type MotionProps } from "framer-motion";
 
-interface MagneticButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
-  strength?: number;
-  className?: string;
-}
+type MagneticButtonProps =
+  Omit<
+    ComponentPropsWithoutRef<"button">,
+    keyof MotionProps
+  > &
+    MotionProps & {
+      strength?: number;
+    };
 
-export function MagneticButton({
+export default function MagneticButton({
   children,
   strength = 0.18,
-  className = "",
-  ...buttonProps
+  onMouseMove,
+  onMouseLeave,
+  style,
+  ...props
 }: MagneticButtonProps) {
-  const buttonRef =
-    useRef<HTMLButtonElement>(null);
-
-  const shouldReduceMotion = useReducedMotion();
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   function handleMouseMove(
     event: React.MouseEvent<HTMLButtonElement>
   ) {
-    if (shouldReduceMotion || !buttonRef.current) {
+    const button = buttonRef.current;
+
+    if (!button) {
+      onMouseMove?.(event);
       return;
     }
 
-    const rect =
-      buttonRef.current.getBoundingClientRect();
+    const rect = button.getBoundingClientRect();
 
     const x =
-      event.clientX -
-      rect.left -
-      rect.width / 2;
+      (event.clientX - rect.left - rect.width / 2) *
+      strength;
 
     const y =
-      event.clientY -
-      rect.top -
-      rect.height / 2;
+      (event.clientY - rect.top - rect.height / 2) *
+      strength;
 
-    buttonRef.current.style.setProperty(
+    button.style.setProperty(
       "--magnetic-x",
-      `${x * strength}px`
+      `${x}px`
     );
 
-    buttonRef.current.style.setProperty(
+    button.style.setProperty(
       "--magnetic-y",
-      `${y * strength}px`
+      `${y}px`
     );
+
+    onMouseMove?.(event);
   }
 
-  function handleMouseLeave() {
-    if (!buttonRef.current) return;
+  function handleMouseLeave(
+    event: React.MouseEvent<HTMLButtonElement>
+  ) {
+    const button = buttonRef.current;
 
-    buttonRef.current.style.setProperty(
-      "--magnetic-x",
-      "0px"
-    );
+    if (button) {
+      button.style.setProperty(
+        "--magnetic-x",
+        "0px"
+      );
 
-    buttonRef.current.style.setProperty(
-      "--magnetic-y",
-      "0px"
-    );
+      button.style.setProperty(
+        "--magnetic-y",
+        "0px"
+      );
+    }
+
+    onMouseLeave?.(event);
   }
 
   return (
     <motion.button
       ref={buttonRef}
-      {...buttonProps}
+      {...props}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      whileTap={{
-        scale: shouldReduceMotion ? 1 : 0.97,
-      }}
+      whileTap={{ scale: 0.97 }}
       style={{
+        ...(style as React.CSSProperties),
         transform:
           "translate3d(var(--magnetic-x, 0px), var(--magnetic-y, 0px), 0)",
       }}
-      className={`will-change-transform ${className}`}
     >
       {children}
     </motion.button>
